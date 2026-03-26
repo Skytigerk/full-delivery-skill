@@ -1,11 +1,20 @@
 ---
 name: full-delivery-skill
-description: "Deliverable-first execution workflow (中文名：完整交付skill). Use when the user asks for 完整交付, 交付物, 做完, 别偷懒, 给最终结果, wants end-to-end task completion instead of advice, or asks for concrete artifacts such as files, patches, commands, checklists, or reports. Automatically classify the task as development, research, documentation, or troubleshooting and choose the matching delivery template. Triggers include full delivery skill, 完整交付skill, 交付模式, 不要只分析, 给交付物."
+description: "Deliverable-first execution workflow (中文名：完整交付skill). Use when the user asks for 完整交付, 交付物, 做完, 别偷懒, 给最终结果, wants end-to-end task completion instead of advice, or asks for concrete artifacts such as files, patches, commands, checklists, or reports. Automatically classify the task as development, research, documentation, or troubleshooting and choose the matching delivery template. Prefer Markdown and shell based resources so the skill is portable across OpenClaw installs. Triggers include full delivery skill, 完整交付skill, 交付模式, 不要只分析, 给交付物."
 ---
 
 # Full Delivery Skill（完整交付skill）
 
 把任何任务变成“可验收的交付”：先定义交付物与完成标准，再执行、验证、交付。禁止只给建议就收工。
+
+## Portable-by-default（通用优先）
+
+- 优先使用 **Markdown + Shell** 资源，减少环境依赖。
+- 不假设某个固定机器路径；涉及本地路径时，优先基于当前 skill 目录推导。
+- 需要长期维护时，优先使用仓库自带的 shell 脚本：
+  - `scripts/install.sh`
+  - `scripts/nightly_update.sh`
+  - `scripts/package_skill.sh`
 
 ## Non-negotiables（硬规则）
 
@@ -20,7 +29,6 @@ description: "Deliverable-first execution workflow (中文名：完整交付skil
 先根据用户目标选择主类型；若混合，选“主要交付物”对应的类型，再在交付包里补副产物。
 
 ### A. Development（开发）
-
 符合任一信号时优先归到开发：
 - 写代码、改代码、实现功能、补测试、重构、发版准备、PR、脚本、配置修改
 - 用户明确要“改文件 / 给补丁 / 跑测试 / 交代码”
@@ -28,7 +36,6 @@ description: "Deliverable-first execution workflow (中文名：完整交付skil
 读：`references/development.md`
 
 ### B. Research（调研）
-
 符合任一信号时优先归到调研：
 - 查资料、做对比、找方案、研究竞品、整理结论、给建议但要有证据
 - 用户要“结论 + 依据 + 来源 + 建议”
@@ -36,7 +43,6 @@ description: "Deliverable-first execution workflow (中文名：完整交付skil
 读：`references/research.md`
 
 ### C. Documentation（文档）
-
 符合任一信号时优先归到文档：
 - 写文档、整理方案、起草 README / PRD / SOP / 汇报 / 提案 / 周报
 - 用户要“可直接发/贴/交”的成稿
@@ -44,10 +50,9 @@ description: "Deliverable-first execution workflow (中文名：完整交付skil
 读：`references/documentation.md`
 
 ### D. Troubleshooting（排障）
-
 符合任一信号时优先归到排障：
 - 报错、异常、故障、根因分析、定位问题、恢复服务、性能问题
-- 用户要“查原因 / 给修复 / 给排查步骤” 
+- 用户要“查原因 / 给修复 / 给排查步骤”
 
 读：`references/troubleshooting.md`
 
@@ -60,7 +65,6 @@ description: "Deliverable-first execution workflow (中文名：完整交付skil
 ## Step 1 — Delivery Contract（交付契约）
 
 输出以下结构（必须出现）：
-
 - **任务类型**：开发 / 调研 / 文档 / 排障
 - **Deliverables（交付物）**：编号列出最终要交的东西
 - **Definition of Done（完成定义）**：每个交付物对应的验收条件
@@ -72,7 +76,6 @@ description: "Deliverable-first execution workflow (中文名：完整交付skil
 ## Step 2 — Execute（执行）
 
 按计划推进，优先使用确定性工具：
-
 - **文件类**：read/edit/write，给出具体文件路径与变更点
 - **工程类**：exec 运行检查/测试/构建；必要时创建补丁
 - **网页/资料类**：能查就查；查不到就说明限制并给替代方案
@@ -90,7 +93,6 @@ description: "Deliverable-first execution workflow (中文名：完整交付skil
 ## Step 4 — Deliver（交付）
 
 用“交付包”的形式输出：
-
 1. **交付物清单**（与 Deliverables 对齐）
 2. **产物位置**（文件路径/链接/命令）
 3. **使用说明**（最短可用路径：怎么跑、怎么验证）
@@ -100,19 +102,28 @@ description: "Deliverable-first execution workflow (中文名：完整交付skil
 ## Step 5 — Personalize（个性化积累）
 
 当用户对结果给出偏好、否定、补充、或者明确说“这样更好/不要这样”时：
-
 - 先在当前回复里吸收这些偏好
 - 如果可以写文件，就把可复用偏好追加到：`data/feedback-log.jsonl`
 - 记录内容尽量短：时间、任务类型、喜欢什么、不喜欢什么、原因、是否被接受
 
-夜间维护任务会把这些反馈整理进：
+夜间维护脚本会整理进：
 - `data/personalization-profile.json`
 - `references/personalization.md`
+- `full-delivery-skill.skill`
+
+## Auto Nightly Maintenance（自动夜间维护）
+
+这个 skill 附带可移植 shell 方案：
+- `scripts/install.sh`：安装/更新 skill，并自动挂好系统 cron
+- `scripts/nightly_update.sh`：每天夜间整理反馈、更新个性化摘要、重新打包 skill
+
+**安全说明**：
+- 不要假设“下载仓库后会自动执行脚本”。下载不应触发任意代码。
+- 正确做法是：下载后执行一次 `./scripts/install.sh`，由它自动完成后续 cron 安装。
 
 ## Output Template（强制输出模板）
 
-在完整交付模式下，最终回复必须包含以下小标题（顺序可微调，但都要出现）：
-
+最终回复必须包含以下小标题（顺序可微调，但都要出现）：
 - **目标**
 - **任务类型**
 - **交付物**
@@ -120,15 +131,6 @@ description: "Deliverable-first execution workflow (中文名：完整交付skil
 - **执行与证据**
 - **最终交付包**
 - **未完成/阻塞（如有）**
-
-## Anti-Laziness Checks（反偷懒自检）
-
-交付前自问并在心里过一遍（不必全写出来）：
-
-- 我有没有把“能做的”变成“叫用户去做”？如果有，改成我直接做
-- 我有没有给出可验收的东西？如果没有，补交付物
-- 我有没有把结论写得像建议？如果用户要“做完”，就要像交付
-- 我有没有根据任务类型套对模板？如果没有，回去补
 
 ## References
 
